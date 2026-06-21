@@ -1878,3 +1878,777 @@ button:disabled {
     width: 100%;
   }
 }
+
+/* Landscape match cockpit ------------------------------------------------- */
+
+.match-cockpit,
+.portrait-rotation-notice {
+  display: none;
+}
+
+.compact-card:focus-visible,
+.cockpit-details-button:focus-visible,
+.cockpit-end-button:focus-visible,
+.modal-utility-bar button:focus-visible,
+.details-header button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.card-overlay-dialog,
+.details-dialog {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+}
+
+.card-overlay-dialog::backdrop,
+.details-dialog::backdrop {
+  background: rgba(4, 24, 20, 0.82);
+  backdrop-filter: blur(5px);
+}
+
+.card-overlay-sheet {
+  --card-tint: var(--card-blue);
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding:
+    max(6px, env(safe-area-inset-top))
+    max(8px, env(safe-area-inset-right))
+    max(6px, env(safe-area-inset-bottom))
+    max(8px, env(safe-area-inset-left));
+  background:
+    linear-gradient(120deg, var(--card-tint), rgba(255, 250, 240, 0.96) 54%),
+    var(--paper);
+  animation: cockpit-modal-enter 170ms ease-out both;
+}
+
+.card-overlay-sheet.type-occasione {
+  --card-tint: var(--card-yellow);
+}
+
+.card-overlay-sheet.type-conclusione {
+  --card-tint: var(--card-red);
+}
+
+.card-overlay-sheet.type-difesa {
+  --card-tint: var(--card-green);
+}
+
+.card-overlay-sheet.type-supporto {
+  --card-tint: var(--card-teal);
+}
+
+.modal-utility-bar,
+.details-header {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-utility-bar > span,
+.details-header > div > span {
+  color: rgba(23, 35, 31, 0.62);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.modal-utility-bar button,
+.details-header button {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--chalk);
+  background: var(--ink);
+  border: 0;
+  border-radius: 50%;
+}
+
+.card-overlay-scroll {
+  width: min(620px, 100%);
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto auto auto auto;
+  align-content: start;
+  gap: 10px;
+  justify-self: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px 10px 14px;
+  scrollbar-gutter: stable;
+}
+
+.card-overlay-scroll h3 {
+  margin: 0;
+  font-family: var(--font-display), Rockwell, serif;
+  font-size: clamp(28px, 7vh, 48px);
+  line-height: 1;
+}
+
+.card-overlay-scroll .card-illustration {
+  height: clamp(132px, 30vh, 230px);
+}
+
+.card-overlay-scroll .card-rules {
+  gap: 8px;
+}
+
+.card-overlay-scroll .card-description {
+  font-size: 15px;
+  line-height: 1.42;
+}
+
+.card-overlay-actions {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(23, 35, 31, 0.14);
+}
+
+.card-overlay-actions .primary-button,
+.card-overlay-actions .secondary-button {
+  min-height: 44px;
+}
+
+.details-dialog {
+  pointer-events: auto;
+}
+
+.details-drawer {
+  width: min(75vw, 720px);
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  margin-left: auto;
+  padding:
+    max(8px, env(safe-area-inset-top))
+    max(10px, env(safe-area-inset-right))
+    max(8px, env(safe-area-inset-bottom))
+    10px;
+  background: #e9efe5;
+  border-left: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: -22px 0 50px rgba(0, 0, 0, 0.34);
+  animation: cockpit-drawer-enter 190ms ease-out both;
+}
+
+.details-header {
+  padding: 0 4px 8px 8px;
+}
+
+.details-header h2 {
+  margin: 2px 0 0;
+  font-family: var(--font-display), Rockwell, serif;
+  font-size: 24px;
+}
+
+.details-scroll {
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 6px 10px 2px;
+}
+
+.details-scroll .info-panel {
+  box-shadow: 0 8px 20px rgba(13, 28, 24, 0.12);
+}
+
+.drawer-deck-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.drawer-deck-stats > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(23, 35, 31, 0.07);
+  border-radius: 8px;
+}
+
+.drawer-deck-stats span,
+.drawer-seed {
+  color: rgba(23, 35, 31, 0.66);
+  font-weight: 900;
+}
+
+.drawer-run-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.drawer-run-controls .secondary-button,
+.drawer-run-controls .end-button {
+  width: 100%;
+}
+
+@keyframes cockpit-modal-enter {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cockpit-drawer-enter {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (orientation: portrait) and (max-width: 760px) {
+  .portrait-rotation-notice {
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 auto 12px;
+    padding: 3px 3px 3px 13px;
+    color: #2f2106;
+    background: var(--gold);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-radius: 8px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .portrait-rotation-notice button {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.38);
+    border: 0;
+    border-radius: 6px;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 667px) and (max-height: 500px) {
+  html.match-active,
+  html.match-active body {
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  .match-active .game-shell {
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    padding:
+      max(5px, env(safe-area-inset-top))
+      max(5px, env(safe-area-inset-right))
+      max(5px, env(safe-area-inset-bottom))
+      max(5px, env(safe-area-inset-left));
+  }
+
+  .match-active .topbar,
+  .desktop-match-layout {
+    display: none;
+  }
+
+  .match-cockpit {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: 48px minmax(0, 1fr) 104px;
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  .cockpit-status {
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    overflow: hidden;
+    padding: 3px;
+    color: var(--chalk);
+    background: rgba(6, 38, 31, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 7px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.17);
+  }
+
+  .cockpit-score {
+    min-width: 88px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 4px;
+    padding: 0 6px;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .cockpit-score span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cockpit-score strong {
+    color: var(--gold);
+    font-size: 21px;
+    line-height: 1;
+  }
+
+  .cockpit-stat {
+    min-width: 46px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    padding: 2px 5px;
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .cockpit-stat span {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .cockpit-stat strong {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .cockpit-modifiers {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    overflow: hidden;
+  }
+
+  .cockpit-modifiers span {
+    min-width: 0;
+    overflow: hidden;
+    padding: 4px 5px;
+    color: #132e20;
+    background: var(--mint);
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cockpit-details-button,
+  .cockpit-end-button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 10px;
+    font-weight: 900;
+    border-radius: 6px;
+  }
+
+  .cockpit-details-button {
+    flex: 0 0 auto;
+    color: var(--ink);
+    background: var(--gold);
+    border: 0;
+    font-size: 11px;
+  }
+
+  .cockpit-middle {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 5px;
+  }
+
+  .cockpit-panel {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    padding: 8px;
+    color: var(--ink);
+    background: rgba(255, 250, 240, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 7px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+  }
+
+  .cockpit-intention.offense {
+    box-shadow: inset 4px 0 0 var(--red), 0 8px 18px rgba(0, 0, 0, 0.15);
+  }
+
+  .cockpit-intention.defense {
+    box-shadow: inset 4px 0 0 var(--blue), 0 8px 18px rgba(0, 0, 0, 0.15);
+  }
+
+  .cockpit-panel-title {
+    min-width: 0;
+    min-height: 21px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(23, 35, 31, 0.12);
+  }
+
+  .cockpit-panel-title > span {
+    color: rgba(23, 35, 31, 0.58);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .cockpit-panel-title > strong {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cockpit-intention-copy {
+    display: grid;
+    gap: 2px;
+    padding: 7px 0 5px;
+  }
+
+  .cockpit-intention-copy strong {
+    font-family: var(--font-display), Rockwell, serif;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .cockpit-intention-copy span {
+    display: -webkit-box;
+    overflow: hidden;
+    color: rgba(23, 35, 31, 0.7);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.2;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .cockpit-risk-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 4px;
+  }
+
+  .cockpit-risk-grid > span {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+    padding: 4px 6px;
+    color: rgba(23, 35, 31, 0.68);
+    background: rgba(23, 35, 31, 0.07);
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .cockpit-risk-grid strong {
+    color: var(--red);
+    font-size: 13px;
+  }
+
+  .cockpit-risk-grid .cockpit-opponent-chance {
+    color: var(--chalk);
+    background: var(--red);
+  }
+
+  .cockpit-risk-grid .cockpit-opponent-chance strong,
+  .cockpit-risk-grid .cockpit-opponent-chance small {
+    color: var(--chalk);
+  }
+
+  .cockpit-opponent-chance small {
+    font-size: 8px;
+  }
+
+  .cockpit-action {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .cockpit-play-order {
+    min-width: 0;
+    min-height: 40px;
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    overflow: hidden;
+  }
+
+  .cockpit-play-order > span:not(.cockpit-empty) {
+    --card-tint: rgba(23, 35, 31, 0.08);
+    min-width: 0;
+    flex: 1 1 0;
+    display: grid;
+    align-content: center;
+    gap: 1px;
+    overflow: hidden;
+    padding: 4px 5px;
+    background: var(--card-tint);
+    border-top: 3px solid var(--ink);
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 1.05;
+    text-overflow: ellipsis;
+  }
+
+  .cockpit-play-order .type-costruzione { --card-tint: var(--card-blue); border-color: var(--blue); }
+  .cockpit-play-order .type-occasione { --card-tint: var(--card-yellow); border-color: var(--gold); }
+  .cockpit-play-order .type-conclusione { --card-tint: var(--card-red); border-color: var(--red); }
+  .cockpit-play-order .type-difesa { --card-tint: var(--card-green); border-color: var(--field); }
+  .cockpit-play-order .type-supporto { --card-tint: var(--card-teal); border-color: var(--field-dark); }
+
+  .cockpit-play-order small {
+    color: rgba(23, 35, 31, 0.52);
+    font-size: 8px;
+  }
+
+  .cockpit-empty {
+    align-self: center;
+    color: rgba(23, 35, 31, 0.5);
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .cockpit-action-bottom {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(130px, 0.8fr);
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  .cockpit-live-modifiers {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 3px;
+    overflow: hidden;
+  }
+
+  .cockpit-live-modifiers > span:not(.cockpit-empty) {
+    min-width: 0;
+    overflow: hidden;
+    padding: 4px 5px;
+    color: #12331e;
+    background: var(--mint);
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cockpit-forecast {
+    min-width: 0;
+    overflow: hidden;
+    padding-left: 5px;
+    border-left: 1px solid rgba(23, 35, 31, 0.12);
+  }
+
+  .cockpit-forecast .shot-forecast {
+    gap: 3px;
+    margin: 0;
+  }
+
+  .cockpit-forecast .shot-summary,
+  .cockpit-forecast .last-shot {
+    min-width: 0;
+    padding: 4px 5px;
+    font-size: 9px;
+  }
+
+  .cockpit-forecast .shot-summary span,
+  .cockpit-forecast .last-shot span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cockpit-forecast .shot-summary strong {
+    font-size: 18px;
+  }
+
+  .cockpit-forecast .chance-breakdown {
+    display: none;
+  }
+
+  .cockpit-forecast .last-shot small {
+    font-size: 8px;
+  }
+
+  .cockpit-hand-row {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .compact-hand {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  .compact-card {
+    --card-tint: var(--card-blue);
+    min-width: 0;
+    min-height: 44px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    align-content: stretch;
+    gap: 3px;
+    overflow: hidden;
+    padding: 7px;
+    color: var(--ink);
+    text-align: left;
+    background: var(--card-tint);
+    border: 1px solid rgba(23, 35, 31, 0.16);
+    border-top: 4px solid var(--blue);
+    border-radius: 7px;
+    box-shadow: 0 7px 16px rgba(0, 0, 0, 0.18);
+  }
+
+  .compact-card.type-occasione { --card-tint: var(--card-yellow); border-top-color: var(--gold); }
+  .compact-card.type-conclusione { --card-tint: var(--card-red); border-top-color: var(--red); }
+  .compact-card.type-difesa { --card-tint: var(--card-green); border-top-color: var(--field); }
+  .compact-card.type-supporto { --card-tint: var(--card-teal); border-top-color: var(--field-dark); }
+
+  .compact-card:disabled {
+    color: rgba(23, 35, 31, 0.66);
+    opacity: 0.68;
+    filter: saturate(0.45);
+  }
+
+  .compact-card-meta {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  .compact-card-meta > span {
+    min-width: 0;
+    overflow: hidden;
+    color: rgba(23, 35, 31, 0.58);
+    font-size: 8px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .compact-card-meta strong {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    font-size: 10px;
+  }
+
+  .compact-card > b {
+    min-width: 0;
+    display: -webkit-box;
+    overflow: hidden;
+    font-family: var(--font-display), Rockwell, serif;
+    font-size: 12px;
+    line-height: 1.05;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .compact-card-impact,
+  .compact-card-disabled {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 8px;
+    font-weight: 900;
+    line-height: 1.05;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .compact-card-impact {
+    color: var(--field-dark);
+  }
+
+  .compact-card-disabled {
+    color: var(--red);
+  }
+
+  .cockpit-end-button {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    padding: 4px;
+    flex-direction: column;
+    color: var(--chalk);
+    background: rgba(220, 62, 49, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    font-size: 9px;
+    line-height: 1.05;
+    text-align: center;
+  }
+
+  .compact-hand {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-overlay-sheet,
+  .details-drawer {
+    animation: none;
+  }
+}

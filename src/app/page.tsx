@@ -51,6 +51,7 @@ import {
   getCalciatorePassives,
   getIntentionExposureBonus,
   getNewPhaseCombinationBonus,
+  hasBuildOccasionSequence,
   isTacticalEffectActive,
 } from "../game/rules";
 import type {
@@ -136,6 +137,8 @@ export default function Home() {
           onPlay={(uid) => apply((state) => playCard(state, uid))}
           onShoot={(uid) => apply((state) => shoot(state, uid))}
           onEndPhase={() => apply(endPhase)}
+          onOpenGuide={() => setIsGuideOpen(true)}
+          onRestart={restart}
         />
       )}
       {run?.status === "reward" && (
@@ -243,6 +246,12 @@ function GameGuide({ onClose }: { onClose: () => void }) {
       onCancel={(event) => {
         event.preventDefault();
         onClose();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onClose();
+        }
       }}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
@@ -445,13 +454,43 @@ function MatchScreen({
   onPlay,
   onShoot,
   onEndPhase,
+  onOpenGuide,
+  onRestart,
 }: {
   run: RunState;
   onPlay: (uid: string) => void;
   onShoot: (uid: string) => void;
   onEndPhase: () => void;
+  onOpenGuide: () => void;
+  onRestart: () => void;
 }) {
   const match = run.match;
+  const [selectedCardUid, setSelectedCardUid] = useState<string | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isRotationNoticeDismissed, setIsRotationNoticeDismissed] =
+    useState(false);
+  const cardTriggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const detailsTriggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    document.documentElement.classList.add("match-active");
+
+    return () => document.documentElement.classList.remove("match-active");
+  }, []);
+
+  useEffect(() => {
+    setSelectedCardUid(null);
+    setIsDetailsOpen(false);
+  }, [match?.phaseNumber]);
+
+  useEffect(() => {
+    if (
+      selectedCardUid &&
+      !match?.hand.some((instance) => instance.uid === selectedCardUid)
+    ) {
+      setSelectedCardUid(null);
+    }
+  }, [match?.hand, selectedCardUid]);
 
   if (!match) {
     return null;
@@ -465,10 +504,49 @@ function MatchScreen({
   const activeCombinations = COMBINATION_RULES.filter((rule) =>
     match.activeCombinationIds.includes(rule.id),
   );
+  const sequenceIsActive = hasBuildOccasionSequence(
+    match.playedCards.map(getCard),
+  );
+  const selectedInstance = selectedCardUid
+    ? match.hand.find((instance) => instance.uid === selectedCardUid) ?? null
+    : null;
+
+  const closeCardOverlay = () => {
+    const trigger = selectedCardUid
+      ? cardTriggerRefs.current[selectedCardUid]
+      : null;
+    setSelectedCardUid(null);
+    window.setTimeout(() => trigger?.focus(), 0);
+  };
+
+  const closeDetails = () => {
+    setIsDetailsOpen(false);
+    window.setTimeout(() => detailsTriggerRef.current?.focus(), 0);
+  };
+
+  const finishPhase = () => {
+    setSelectedCardUid(null);
+    setIsDetailsOpen(false);
+    onEndPhase();
+  };
 
   return (
-    <section className="match-layout">
-      <section className="match-main">
+    <>
+      {!isRotationNoticeDismissed && (
+        <aside className="portrait-rotation-notice" aria-label="Suggerimento orientamento">
+          <span>Ruota il telefono per usare il cockpit Partita.</span>
+          <button
+            type="button"
+            onClick={() => setIsRotationNoticeDismissed(true)}
+            aria-label="Chiudi suggerimento"
+          >
+            <X aria-hidden="true" size={18} />
+          </button>
+        </aside>
+      )}
+
+      <section className="match-layout desktop-match-layout">
+        <section className="match-main">
         <div className="score-strip">
           <Metric label="Partita" value={`${match.matchNumber}/5`} />
           <Metric label="Fase" value={`${match.phaseNumber}/10`} />
@@ -648,7 +726,434 @@ function MatchScreen({
           </ol>
         </section>
       </aside>
-    </section>
+      </section>
+
+      <section className="match-cockpit" aria-label="Cockpit Partita">
+        <header className="cockpit-status">
+          <div className="cockpit-score" aria-label={`Punteggio ${match.playerScore} a ${match.opponentScore}`}>
+            <span>Tu</span>
+            <strong>{match.playerScore}:{match.opponentScore}</strong>
+            <span>{opponent.name}</span>
+          </div>
+          <CockpitStat label="Partita" value={`${match.matchNumber}/5`} />
+          <CockpitStat label="Fase" value={`${match.phaseNumber}/10`} />
+          <CockpitStat label="Energia" value={match.energy} icon={<Zap size={14} />} />
+          <CockpitStat
+            label="Pericolo"
+            value={
+              effectiveDanger === match.danger
+                ? match.danger
+                : `${effectiveDanger}/${match.danger}`
+            }
+            icon={<Target size={14} />}
+          />
+          <CockpitStat label="Copertura" value={match.coverage} icon={<Shield size={14} />} />
+          {match.imbalance > 0 && (
+            <CockpitStat label="Sbilanc." value={`-${match.imbalance}`} />
+          )}
+          <div className="cockpit-modifiers" aria-label="Modificatori attivi">
+            {sequenceIsActive && <span>Sequenza +{BUILD_OCCASION_SEQUENCE_BONUS}%</span>}
+            {activeCombinations.map((rule) => (
+              <span key={rule.id}>{rule.name}</span>
+            ))}
+            {match.activeTacticalEffects.map((effect) => (
+              <span key={effect.id}>{effect.label}</span>
+            ))}
+          </div>
+          <button
+            ref={detailsTriggerRef}
+            className="cockpit-details-button"
+            type="button"
+            onClick={() => {
+              setSelectedCardUid(null);
+              setIsDetailsOpen(true);
+            }}
+            aria-haspopup="dialog"
+          >
+            <ClipboardList aria-hidden="true" size={17} />
+            Dettagli
+          </button>
+        </header>
+
+        <div className="cockpit-middle">
+          <section className={`cockpit-panel cockpit-intention ${intention.type}`}>
+            <div className="cockpit-panel-title">
+              <span>Intenzione Avversaria</span>
+              <strong>{opponent.name}</strong>
+            </div>
+            <div className="cockpit-intention-copy">
+              <strong>{intention.name}</strong>
+              <span>{intention.description}</span>
+            </div>
+            <div className="cockpit-risk-grid">
+              {intention.baseThreat !== undefined && (
+                <span>Minaccia <strong>{intention.baseThreat}</strong></span>
+              )}
+              {intention.dangerPenalty !== undefined && (
+                <span>Pericolosità <strong>-{intention.dangerPenalty}</strong></span>
+              )}
+              {intention.goalChancePenalty !== undefined && (
+                <span>Conclusione <strong>-{intention.goalChancePenalty}%</strong></span>
+              )}
+              {exposureBonus > 0 && (
+                <span>Esposizione <strong>+{exposureBonus}%</strong></span>
+              )}
+              {opponentChance && (
+                <span className="cockpit-opponent-chance">
+                  Gol rivale <strong>{opponentChance.percent}%</strong>
+                  <small>Minaccia residua {opponentChance.residualThreat}</small>
+                </span>
+              )}
+            </div>
+          </section>
+
+          <section className="cockpit-panel cockpit-action">
+            <div className="cockpit-panel-title">
+              <span>Azione in corso</span>
+              <strong>{match.playedCards.length} carte</strong>
+            </div>
+            <div className="cockpit-play-order" aria-label="Carte giocate in ordine">
+              {match.playedCards.length === 0 ? (
+                <span className="cockpit-empty">Inizia dalla Mano</span>
+              ) : (
+                match.playedCards.map((instance, index) => (
+                  <span key={instance.uid} className={`type-${getCard(instance).type}`}>
+                    <small>{index + 1}</small>
+                    {getCard(instance).name}
+                  </span>
+                ))
+              )}
+            </div>
+            <div className="cockpit-action-bottom">
+              <div className="cockpit-live-modifiers">
+                {sequenceIsActive && <span>Bonus di Sequenza attivo</span>}
+                {activeCombinations.map((rule) => (
+                  <span key={rule.id}>Combinazione: {rule.name}</span>
+                ))}
+                {match.activeTacticalEffects.map((effect) => (
+                  <span key={effect.id}>Effetto: {effect.label}</span>
+                ))}
+                {!sequenceIsActive &&
+                  activeCombinations.length === 0 &&
+                  match.activeTacticalEffects.length === 0 && (
+                    <span className="cockpit-empty">Nessun bonus attivo</span>
+                  )}
+              </div>
+              <div className="cockpit-forecast">
+                <ShotForecast run={run} />
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div className="cockpit-hand-row">
+          <button className="cockpit-end-button" type="button" onClick={finishPhase}>
+            <Flag aria-hidden="true" size={16} />
+            Termina Fase
+          </button>
+          <section className="compact-hand" aria-label="Mano compatta">
+            {match.hand.map((instance) => (
+              <CompactHandCard
+                key={instance.uid}
+                buttonRef={(node) => {
+                  cardTriggerRefs.current[instance.uid] = node;
+                }}
+                instance={instance}
+                run={run}
+                onInspect={() => {
+                  setIsDetailsOpen(false);
+                  setSelectedCardUid(instance.uid);
+                }}
+              />
+            ))}
+          </section>
+        </div>
+      </section>
+
+      {selectedInstance && (
+        <CardOverlay
+          instance={selectedInstance}
+          run={run}
+          onClose={closeCardOverlay}
+          onExecute={() => {
+            const card = getCard(selectedInstance);
+            if (card.type === "conclusione") {
+              onShoot(selectedInstance.uid);
+            } else {
+              onPlay(selectedInstance.uid);
+            }
+            setSelectedCardUid(null);
+            window.setTimeout(() => detailsTriggerRef.current?.focus(), 0);
+          }}
+        />
+      )}
+
+      {isDetailsOpen && (
+        <DetailsDrawer
+          run={run}
+          onClose={closeDetails}
+          onOpenGuide={() => {
+            setIsDetailsOpen(false);
+            onOpenGuide();
+          }}
+          onRestart={onRestart}
+        />
+      )}
+    </>
+  );
+}
+
+function CockpitStat({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  icon?: ReactNode;
+}) {
+  return (
+    <div className="cockpit-stat">
+      <span>{icon}{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function CompactHandCard({
+  instance,
+  run,
+  onInspect,
+  buttonRef,
+}: {
+  instance: CardInstance;
+  run: RunState;
+  onInspect: () => void;
+  buttonRef: (node: HTMLButtonElement | null) => void;
+}) {
+  const card = getCard(instance);
+  const chance =
+    card.type === "conclusione" ? getGoalChanceForCard(run, instance) : null;
+  const impact = getCardImpact(card, run);
+  const disabledReason = getCardDisabledReason(run.match);
+  const impactLabels = [
+    impact.dangerTotal !== 0
+      ? `${formatSigned(impact.dangerTotal)} Pericolo`
+      : "",
+    impact.coverageTotal !== 0
+      ? `${formatSigned(impact.coverageTotal)} Copertura`
+      : "",
+  ].filter(Boolean);
+  const mainImpact = chance
+    ? `${chance.percent}% Gol`
+    : impactLabels.join(" · ") || "Effetto tattico";
+
+  return (
+    <button
+      ref={buttonRef}
+      className={`compact-card type-${card.type} ${
+        card.identityCoachId ? "identity-card" : ""
+      }`}
+      type="button"
+      disabled={Boolean(disabledReason)}
+      onClick={onInspect}
+      aria-label={`${card.name}, ${CARD_TYPE_LABEL[card.type]}, costo ${card.cost}, ${mainImpact}${
+        disabledReason ? `, non disponibile: ${disabledReason}` : ", apri dettagli"
+      }`}
+    >
+      <span className="compact-card-meta">
+        <span>{CARD_TYPE_LABEL[card.type]}</span>
+        <strong><Zap aria-hidden="true" size={12} />{card.cost}</strong>
+      </span>
+      <b>{card.name}</b>
+      <span className="compact-card-impact">{mainImpact}</span>
+      {disabledReason && <span className="compact-card-disabled">{disabledReason}</span>}
+    </button>
+  );
+}
+
+function CardOverlay({
+  instance,
+  run,
+  onClose,
+  onExecute,
+}: {
+  instance: CardInstance;
+  run: RunState;
+  onClose: () => void;
+  onExecute: () => void;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const card = getCard(instance);
+  const isAvailable = Boolean(
+    run.match?.hand.some((candidate) => candidate.uid === instance.uid),
+  );
+  const disabledReason = isAvailable
+    ? getCardDisabledReason(run.match)
+    : "Carta non più disponibile";
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) {
+      dialog.showModal();
+    }
+  }, []);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      className="card-overlay-dialog"
+      aria-labelledby="card-overlay-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onClose();
+        }
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <article className={`card-overlay-sheet type-${card.type}`}>
+        <header className="modal-utility-bar">
+          <span>Ispezione carta</span>
+          <button autoFocus type="button" onClick={onClose} aria-label="Chiudi carta">
+            <X aria-hidden="true" size={20} />
+          </button>
+        </header>
+        <div className="card-overlay-scroll">
+          <TacticalCardContent
+            instance={instance}
+            run={run}
+            titleId="card-overlay-title"
+            disabledReason={disabledReason}
+          />
+        </div>
+        <footer className="card-overlay-actions">
+          <button className="secondary-button" type="button" onClick={onClose}>
+            Torna alla Mano
+          </button>
+          <button
+            className="primary-button"
+            type="button"
+            disabled={Boolean(disabledReason)}
+            onClick={onExecute}
+          >
+            {card.type === "conclusione" ? (
+              <><Target aria-hidden="true" size={18} />Concludi</>
+            ) : (
+              <><Play aria-hidden="true" size={18} />Gioca</>
+            )}
+          </button>
+        </footer>
+      </article>
+    </dialog>
+  );
+}
+
+function DetailsDrawer({
+  run,
+  onClose,
+  onOpenGuide,
+  onRestart,
+}: {
+  run: RunState;
+  onClose: () => void;
+  onOpenGuide: () => void;
+  onRestart: () => void;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const match = run.match;
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) {
+      dialog.showModal();
+    }
+  }, []);
+
+  if (!match) {
+    return null;
+  }
+
+  return (
+    <dialog
+      ref={dialogRef}
+      className="details-dialog"
+      aria-labelledby="details-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onClose();
+        }
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <aside className="details-drawer">
+        <header className="details-header">
+          <div>
+            <span>Lavagna laterale</span>
+            <h2 id="details-title">Dettagli Partita</h2>
+          </div>
+          <button autoFocus type="button" onClick={onClose} aria-label="Chiudi Dettagli">
+            <X aria-hidden="true" size={20} />
+          </button>
+        </header>
+        <div className="details-scroll">
+          <CoachRunPanel run={run} />
+          <section className="info-panel">
+            <div className="panel-title">
+              <Users aria-hidden="true" size={18} />
+              <h2>Squadra e Bonus Passivi</h2>
+            </div>
+            <div className="mini-squad">
+              {getSquad(run).map((calciatore) => (
+                <span key={calciatore.id} className={`tier-${calciatore.category}`}>
+                  <strong>{calciatore.name}</strong>
+                  <small>{calciatore.bonusText}</small>
+                </span>
+              ))}
+            </div>
+          </section>
+          <section className="info-panel drawer-deck-stats">
+            <div><span>Mazzo</span><strong>{match.drawPile.length}/{run.ownedDeck.length}</strong></div>
+            <div><span>Scarti</span><strong>{match.discardPile.length}</strong></div>
+          </section>
+          <SynergyReference />
+          <section className="info-panel">
+            <h2>Registro</h2>
+            <ol className="log-list">
+              {run.log.map((entry, index) => (
+                <li key={`${entry}-${index}`}>{entry}</li>
+              ))}
+            </ol>
+          </section>
+          <section className="info-panel drawer-run-controls">
+            <span className="seed-line drawer-seed">Seed {run.seed}</span>
+            <button className="secondary-button" type="button" onClick={onOpenGuide}>
+              <BookOpen aria-hidden="true" size={18} />Come si gioca
+            </button>
+            <button className="end-button" type="button" onClick={onRestart}>
+              <RotateCcw aria-hidden="true" size={18} />Nuova Run
+            </button>
+          </section>
+        </div>
+      </aside>
+    </dialog>
   );
 }
 
@@ -686,11 +1191,43 @@ function HandCard({
   onShoot: (uid: string) => void;
 }) {
   const card = getCard(instance);
+  const isConclusion = card.type === "conclusione";
+  const disabledReason = getCardDisabledReason(run.match);
+  const disabled = Boolean(disabledReason);
+
+  return (
+    <button
+      className={`play-card type-${card.type} ${
+        card.identityCoachId ? "identity-card" : ""
+      }`}
+      type="button"
+      disabled={disabled}
+      onClick={() => (isConclusion ? onShoot(instance.uid) : onPlay(instance.uid))}
+    >
+      <TacticalCardContent
+        instance={instance}
+        run={run}
+        disabledReason={disabledReason}
+      />
+    </button>
+  );
+}
+
+function TacticalCardContent({
+  instance,
+  run,
+  disabledReason,
+  titleId,
+}: {
+  instance: CardInstance;
+  run: RunState;
+  disabledReason: string | null;
+  titleId?: string;
+}) {
+  const card = getCard(instance);
   const match = run.match;
   const isConclusion = card.type === "conclusione";
   const chance = isConclusion ? getGoalChanceForCard(run, instance) : null;
-  const disabledReason = getCardDisabledReason(match);
-  const disabled = Boolean(disabledReason);
   const impact = getCardImpact(card, run);
   const visibleBoosts = getVisibleBoosts(card, run);
   const previewCombination =
@@ -705,19 +1242,12 @@ function HandCard({
   );
 
   return (
-    <button
-      className={`play-card type-${card.type} ${
-        card.identityCoachId ? "identity-card" : ""
-      }`}
-      type="button"
-      disabled={disabled}
-      onClick={() => (isConclusion ? onShoot(instance.uid) : onPlay(instance.uid))}
-    >
+    <>
       <span className="card-top-row">
         <span className="card-type">{CARD_TYPE_LABEL[card.type]}</span>
         <span className="card-cost">Costo {card.cost}</span>
       </span>
-      <h3>{card.name}</h3>
+      <h3 id={titleId}>{card.name}</h3>
       <CardIllustration card={card} />
       <div className="card-rules">
         <p className="card-description">{card.description}</p>
@@ -738,12 +1268,10 @@ function HandCard({
           </span>
         )}
         {chance && <ChanceBreakdown chance={chance} />}
-        {disabledReason && (
-          <span className="disabled-reason">{disabledReason}</span>
-        )}
+        {disabledReason && <span className="disabled-reason">{disabledReason}</span>}
       </div>
       <TagList card={card} />
-    </button>
+    </>
   );
 }
 
